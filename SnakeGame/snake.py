@@ -2,32 +2,29 @@ import turtle
 import time
 import random
 
-# تاخیر بین فریم‌ها
+# ⚙️ تنظیمات اولیه
 delay = 0.1
-
-# امتیازها
 score = 0
 high_score = 0
+colors = ["red", "orange", "yellow", "green", "blue", "purple"]
 
-# تنظیم صفحه بازی
+# 🖥️ صفحه بازی
 wn = turtle.Screen()
-wn.title("Snake Game by Fadaei")
-wn.bgcolor("green")
+wn.title("Snake Game with Visual Effects")
+wn.bgcolor("black")
 wn.setup(width=600, height=600)
 wn.tracer(0)
 
-# سر مار
+# 🐍 سر مار
 head = turtle.Turtle()
-head.speed(0)
 head.shape("square")
-head.color("black")
+head.color("white")
 head.penup()
 head.goto(0, 0)
 head.direction = "stop"
 
-# غذا
+# 🍏 غذا
 food = turtle.Turtle()
-food.speed(0)
 food.shape("circle")
 food.color("red")
 food.penup()
@@ -35,17 +32,54 @@ food.goto(0, 100)
 
 segments = []
 
-# نوشتن امتیاز
+# 📊 امتیازدهی
 pen = turtle.Turtle()
 pen.speed(0)
-pen.shape("square")
 pen.color("white")
 pen.penup()
 pen.hideturtle()
 pen.goto(0, 260)
-pen.write("Score: 0, High Score: 0", align="center", font=("Courier", 24, "normal"))
+pen.write("Score: 0    High Score: 0", align="center", font=("Courier", 24, "normal"))
 
-# توابع کنترل جهت
+# 💥 تابع تولید افکت پارتیکل هنگام خوردن غذا
+def create_particles(x, y):
+    particles = []
+
+    for _ in range(15):
+        p = turtle.Turtle()
+        p.shape("circle")
+        p.color(random.choice(colors))
+        p.penup()
+        p.goto(x, y)
+        p.shapesize(random.uniform(0.4, 1.0))
+        dx = random.uniform(-30, 30)
+        dy = random.uniform(-30, 30)
+        particles.append((p, dx, dy))
+
+    steps = 10
+    def animate(step):
+        if step <= steps:
+            for p, dx, dy in particles:
+                p.goto(p.xcor() + dx / steps, p.ycor() + dy / steps)
+            wn.ontimer(lambda: animate(step + 1), 50)
+        else:
+            for p, _, _ in particles:
+                p.hideturtle()
+                p.goto(1000, 1000)
+    animate(0)
+
+# 🧭 حرکت دادن مار
+def move():
+    if head.direction == "up":
+        head.sety(head.ycor() + 20)
+    elif head.direction == "down":
+        head.sety(head.ycor() - 20)
+    elif head.direction == "left":
+        head.setx(head.xcor() - 20)
+    elif head.direction == "right":
+        head.setx(head.xcor() + 20)
+
+# 🎮 کنترل جهت حرکت
 def go_up():
     if head.direction != "down":
         head.direction = "up"
@@ -54,103 +88,80 @@ def go_down():
     if head.direction != "up":
         head.direction = "down"
 
-def go_right():
-    if head.direction != "left":
-        head.direction = "right"
-
 def go_left():
     if head.direction != "right":
         head.direction = "left"
 
-# تابع حرکت دادن مار
-def move():
-    if head.direction == "up":
-        head.sety(head.ycor() + 20)
-    if head.direction == "down":
-        head.sety(head.ycor() - 20)
-    if head.direction == "right":
-        head.setx(head.xcor() + 20)
-    if head.direction == "left":
-        head.setx(head.xcor() - 20)
+def go_right():
+    if head.direction != "left":
+        head.direction = "right"
 
-# کلیدهای کنترل
+# ⌨️ تعریف کلیدها
 wn.listen()
-wn.onkeypress(go_up, "w")
-wn.onkeypress(go_down, "s")
-wn.onkeypress(go_right, "d")
-wn.onkeypress(go_left, "a")
+wn.onkeypress(go_up, "Up")
+wn.onkeypress(go_down, "Down")
+wn.onkeypress(go_left, "Left")
+wn.onkeypress(go_right, "Right")
 
-# حلقه اصلی بازی
-while True:
-    wn.update()
+# 🔁 حلقه‌ی اصلی بازی
+try:
+    while True:
+        wn.update()
 
-    # برخورد با لبه‌ها
-    if head.xcor() > 290 or head.xcor() < -290 or head.ycor() > 290 or head.ycor() < -290:
-        time.sleep(1)
-        head.goto(0, 0)
-        head.direction = "stop"
-
-        # مخفی کردن قسمت‌ها
-        for segment in segments:
-            segment.goto(1000, 1000)
-        segments.clear()
-
-        # ریست امتیازها
-        score = 0
-        delay = 0.1
-        pen.clear()
-        pen.write("Score: {} High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal"))
-
-    # برخورد با غذا
-    if head.distance(food) < 20:
-        x = random.randint(-290, 290)
-        y = random.randint(-290, 290)
-        food.goto(x, y)
-
-        # اضافه کردن بخش جدید به مار
-        new_segment = turtle.Turtle()
-        new_segment.speed(0)
-        new_segment.shape("square")
-        new_segment.color("grey")
-        new_segment.penup()
-        segments.append(new_segment)
-
-        delay -= 0.001
-        score += 10
-
-        if score > high_score:
-            high_score = score
-
-        pen.clear()
-        pen.write("Score: {} High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal"))
-
-    # حرکت بخش‌های بدن مار
-    for index in range(len(segments) - 1, 0, -1):
-        x = segments[index - 1].xcor()
-        y = segments[index - 1].ycor()
-        segments[index].goto(x, y)
-
-    if len(segments) > 0:
-        segments[0].goto(head.xcor(), head.ycor())
-
-    move()
-
-    # برخورد سر با بدن
-    for segment in segments:
-        if segment.distance(head) < 20:
-            time.sleep(1)
+        # 🚫 برخورد با دیواره‌ها
+        if abs(head.xcor()) > 290 or abs(head.ycor()) > 290:
+            time.sleep(0.5)
             head.goto(0, 0)
             head.direction = "stop"
-
             for segment in segments:
                 segment.goto(1000, 1000)
             segments.clear()
-
             score = 0
-            delay = 0.1
             pen.clear()
-            pen.write("Score: {} High Score: {}".format(score, high_score), align="center", font=("Courier", 24, "normal"))
+            pen.write(f"Score: {score}    High Score: {high_score}", align="center", font=("Courier", 24, "normal"))
 
-    time.sleep(delay)
+        # 🍽️ خوردن غذا
+        if head.distance(food) < 20:
+            x = random.randint(-280, 280)
+            y = random.randint(-280, 280)
+            food.goto(x, y)
+            create_particles(x, y)
 
-wn.mainloop()
+            new_segment = turtle.Turtle()
+            new_segment.shape("square")
+            new_segment.color("grey")
+            new_segment.penup()
+            segments.append(new_segment)
+
+            score += 10
+            if score > high_score:
+                high_score = score
+
+            pen.clear()
+            pen.write(f"Score: {score}    High Score: {high_score}", align="center", font=("Courier", 24, "normal"))
+
+        # 🐍 دنبال کردن مار
+        for i in range(len(segments) - 1, 0, -1):
+            segments[i].goto(segments[i - 1].xcor(), segments[i - 1].ycor())
+        if segments:
+            segments[0].goto(head.xcor(), head.ycor())
+
+        move()
+
+        # ⚠️ برخورد با خودش
+        for segment in segments:
+            if segment.distance(head) < 20:
+                time.sleep(0.5)
+                head.goto(0, 0)
+                head.direction = "stop"
+                for segment in segments:
+                    segment.goto(1000, 1000)
+                segments.clear()
+                score = 0
+                pen.clear()
+                pen.write(f"Score: {score}    High Score: {high_score}", align="center", font=("Courier", 24, "normal"))
+
+        time.sleep(delay)
+
+except turtle.Terminator:
+    print("🎮 بازی متوقف شد — پنجره بسته شده یا پایان یافت.")
